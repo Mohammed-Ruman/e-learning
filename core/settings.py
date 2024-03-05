@@ -29,7 +29,8 @@ INTERNAL_APPS = [
 ]
 
 EXTERNAL_APPS=[
-    'account'
+    'account',
+    'main'
 ]
 
 
@@ -50,7 +51,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR,'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,3 +120,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'buildclever25@gmail.com'  # Your Gmail email address
+EMAIL_HOST_PASSWORD = 'uayy oyco avsn lexa '  # Your Gmail password or app-specific password
+

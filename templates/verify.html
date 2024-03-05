@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Verification{% endblock %}
+
+{% block content %}
+<div class="container card shadow-lg mt-5">
+    <form class="m-3 " method="post">
+        {% csrf_token %}
+        <h3 class="d-flex justify-content-center">Account Verification</h3>
+    
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label">OTP</label>
+          <input type="text" class="form-control" name="otp">
+        </div>    
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+</div>
+{% endblock %}
