@@ -10,6 +10,7 @@ class CustomUser(AbstractUser):
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
     is_teacher = models.BooleanField(default=False)
+    is_student = models.BooleanField(default=False)
     password = models.CharField(max_length=8)
     is_verified = models.BooleanField(default=False)
     otp = models.CharField(max_length=6, default="000000")

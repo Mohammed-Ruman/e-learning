@@ -1,27 +1,25 @@
 
 from django.shortcuts import render,redirect,get_object_or_404
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth import get_user_model
 from django.contrib import messages
 from django.contrib.auth import authenticate,login, logout
 from account.email import send_otp_via_email,send_otp
 from django.urls import reverse
 import random
-from django.contrib.auth.decorators import login_required
-
-
+from django.contrib.auth.decorators import login_required,permission_required
+from .models import Course,CourseContent
 
 User=get_user_model()
 
 
-# Create your views here.
-@login_required(login_url="login/")
 def home_page(request):
-    email=request.user
-    user=User.objects.get(email=email)
-    full_name=user.name()
-    return render(request,'index.html',{'name':full_name})
-
+    if request.user.is_authenticated:
+        email = request.user.email
+        user = User.objects.get(email=email)
+        full_name = user.get_full_name()
+        return render(request, 'index.html', {'name': full_name})
+    return render(request, 'index.html', {'name': 'User'})
 
 def register_page(request):
     if request.method != 'POST':
@@ -52,7 +50,13 @@ def register_page(request):
 
     if registration_type=='teacher':
         user.is_teacher=True
-
+        group, created = Group.objects.get_or_create(name="Teacher")
+        user.groups.add(group)
+    elif registration_type=='student':
+        user.is_student=True
+        group, created = Group.objects.get_or_create(name="Student")
+        user.groups.add(group)
+   
     user.set_password(password)
     user.save()
     messages.success(request, "Registration Successfully! Check Email for Account Activation")
@@ -129,8 +133,111 @@ def verify_otp_login(request,email):
     
     return render(request, 'verify_login.html', {'email': email})
 
+def handle_exception(request, exception):
+    print('method called')
+    # Get the exception class name
+    exception_name = exception.__class__.__name__
+
+    print(exception_name)
+
+    status_code = 403 if exception_name=='PermissionDenied' else 500
+    # Render the exception template with the exception details
+    return render(request, 'exception.html', {
+        'exception_name': exception_name,
+        'status_code': status_code
+    })
+
+@login_required(login_url='login')
+@permission_required(['main.add_course','main.view_course','main.change_course','main.delete_course'],raise_exception=True)
+def teacher_dashboard(request):
+    courses = Course.objects.filter(teacher=request.user)
+    name=request.user.name()
+    return render(request,'teacher/dashboard.html',{'courses':courses,'name':name})
+
+@login_required(login_url='login')
+@permission_required(['main.add_course'],raise_exception=True)
+def add_course(request):
+    user=request.user
+
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        course_price = request.POST.get('course_price')
+        cover_image = request.FILES.get('cover_image')
+
+        content_title = request.POST.get('content_title')
+        content = request.FILES.get('content')
+        
+        # Create a new Course object with the uploaded file
+        course = Course.objects.create(
+            title=title,
+            description=description,
+            course_price=course_price,
+            cover_image=cover_image,
+            teacher=user
+        )
+
+        CourseContent.objects.create(
+            course=course,
+            content_title=content_title,
+            content=content
+        )
+        messages.success(request,"Course Added!")
+        return redirect('teacher dashboard')
+    
+    return render(request,'teacher/addcourse.html')
+
+@login_required(login_url='login')
+@permission_required(['main.change_course'],raise_exception=True)
+def edit_course(request,id):
+    course=Course.objects.get(id=id)
+    content=CourseContent.objects.get(course=course)
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        course_price = request.POST.get('course_price')
+        cover_image = request.FILES.get('cover_image')
+
+        content_title = request.POST.get('content_title')
+        contentFile = request.FILES.get('content')
+        
+        # Create a new Course object with the uploaded file
+        course.title = title
+        course.description = description
+        course.course_price = course_price
+
+        if cover_image:
+            course.cover_image = cover_image
+
+        course.save()
+
+        content.course=course
+        content.content_title=content_title
+
+        if contentFile:
+            content.content=contentFile
+
+        content.save()
+        messages.success(request,"Course Edited Successfully!")
+        return redirect('teacher dashboard')
+    return render(request,'teacher/editcourse.html',{'course':course,'content':content})
+
+@login_required(login_url='login')
+@permission_required(['main.delete_course'],raise_exception=True)
+def delete_course(request,id):
+    course=Course.objects.get(id=id)
+
+    if request.method=="POST":
+        confirm_delete=request.POST.get('confirm_delete')
+
+        if confirm_delete=='yes':
+            CourseContent.objects.filter(course=course).delete()
+            course.delete()
+            messages.success(request,"Course Deleted!")
+            return redirect('teacher dashboard')
+        elif confirm_delete=='no':
+            return redirect('teacher dashboard')
 
 
-
-
+    return render(request,'teacher/delete.html',{"course":course})
 

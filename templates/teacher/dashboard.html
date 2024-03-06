@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% endif %}
+    <h2 class="text-center mt-4 mb-4">Welcome to Dashboard, {{name}}</h2>
+        <div class="row container ">
+            <div class="col">Number of Courses: <strong>{{courses.count}} </strong></div>
+            <div class="col">Total Income: <strong>$100</strong></div>
+            <div class="col">Total Subscription: <strong>100</strong></div>
+            <div class="col"><a href="{% url 'add course' %}" class="btn btn-success"> <i class="fa-solid fa-plus"></i>&nbsp; Add Course </a></div>
+        </div>
+    <div class="container">
+        <h3 class="text-center mt-3 mb-3">COURSES</h3>
+        <hr>
+        <div class="row mt-3">
+            {% for course in courses %}
+            <div class="card  shadow-lg " style="max-width: 540px;margin-right: 3.5rem;margin-bottom: 2rem;">
+                <div class="row g-0">
+                <div class="col-md-4 mt-3" >
+                    <img src="/media/{{ course.cover_image }}" class="img-fluid rounded-start" alt="cover_image">
+                </div>
+
+                <div class="col-md-8">
+                    <div class="card-body">
+                    <h5 class="card-title"><b>{{ course.title }}</b></h5>
+                    <p class="card-text" style="font-size: small;">{{ course.description|truncatewords:25 }}{% if course.description|wordcount > 25 %}...{% endif %}</p>
+                    <p class="card-text" style="font-size: small;">Instructor : {{name}}</p>
+                    <p class="card-text" style="font-size: small;">Price : ₹ {{ course.course_price }}</p>
+                    </div>
+                </div>
+                </div>
+                <div class="d-flex justify-content-center mb-3">
+                    <a href="{% url 'edit course' id=course.id %}" class="col btn btn-primary " style="margin-left:1.5rem ; margin-right: 1.5rem;"><i class="fa-solid fa-wand-magic"></i>&nbsp;&nbsp;Edit</a>
+                    <a href="{% url 'delete course' id=course.id %}" class="col btn btn-danger " style="margin-left:1.5rem ; margin-right: 1.5rem;"><i class="fa-solid fa-trash"></i>&nbsp;&nbsp;Delete</a>
+                </div>
+            </div>
+
+            {% endfor %}
+
+        </div>  
+    </div>
+</div>
+{% endblock %}

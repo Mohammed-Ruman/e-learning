@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Course{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-body">
+                    <form class="m-3" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <h3 class="text-center">Course Creation</h3>
+                      
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}" role="alert">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Price</label>
+                            <input type="number" class="form-control" name="course_price" step="1" min="0" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Upload Cover Image</label>
+                            <input type="file" class="form-control" name="cover_image" accept="image/*" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Content Title</label>
+                            <input type="text" class="form-control" name="content_title"  required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Upload Content Video</label>
+                            <input type="file" class="form-control" name="content" accept="video/*" required>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Create</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

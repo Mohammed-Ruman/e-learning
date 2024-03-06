@@ -1,22 +1,14 @@
-"""
-URL configuration for core project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path
 from main import views
+from main.views import handle_exception
+from django.conf import settings
+from django.conf.urls.static import static
+
+
+handler404 = handle_exception
+handler403 = handle_exception
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +18,9 @@ urlpatterns = [
     path('logout/',views.logout_page,name='logout'),
     path('verify/<str:email>/', views.verify_otp, name='verify'),
     path('verify_login/<str:email>/', views.verify_otp_login, name='verify_login'),  
-]
+    path('teacher/dashboard',views.teacher_dashboard,name='teacher dashboard'),
+    path('teacher/add',views.add_course,name='add course'),
+    path('teacher/edit/<str:id>',views.edit_course,name='edit course'),
+    path('teacher/delete/<str:id>',views.delete_course,name='delete course'),
+
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

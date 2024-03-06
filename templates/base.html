@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
         <title>
             {% block title %}
             
@@ -28,11 +29,15 @@
                             <a class="nav-link active" aria-current="page" href="#"><i class="fa-solid fa-book"></i>&nbsp;Course</a>
                         </li>
                     </ul>
-                    {% if request.user.is_authenticated %}
+                    {% if request.user.is_authenticated and request.user.is_teacher %}
                     <ul class="navbar-nav mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="{% url 'logout' %}"><i class="fa-solid fa-right-to-bracket"></i>&nbsp;Logout</a>
+                        <li class="nav-item ">
+                            <a class="nav-link active " aria-current="page" href="{% url 'teacher dashboard' %}"><i class="fa-solid fa-user"></i>&nbsp;Profile</a>
                         </li>
+                        <li class="nav-item ">
+                            <a class="nav-link active " aria-current="page" href="{% url 'logout' %}"><i class="fa-solid fa-door-open"></i>&nbsp;Logout</a>
+                        </li>
+                        
                     </ul>
                     {% else %}
                     <ul class="navbar-nav mb-2 mb-lg-0">
