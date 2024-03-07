@@ -26,13 +26,23 @@
                             <a class="nav-link active" aria-current="page" href="{% url 'home' %}"><i class="fa-solid fa-house"></i>&nbsp;Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#"><i class="fa-solid fa-book"></i>&nbsp;Course</a>
+                            <a class="nav-link active" aria-current="page" href="{% url 'course' %}"><i class="fa-solid fa-book"></i>&nbsp;Course</a>
                         </li>
                     </ul>
                     {% if request.user.is_authenticated and request.user.is_teacher %}
                     <ul class="navbar-nav mb-2 mb-lg-0">
                         <li class="nav-item ">
                             <a class="nav-link active " aria-current="page" href="{% url 'teacher dashboard' %}"><i class="fa-solid fa-user"></i>&nbsp;Profile</a>
+                        </li>
+                        <li class="nav-item ">
+                            <a class="nav-link active " aria-current="page" href="{% url 'logout' %}"><i class="fa-solid fa-door-open"></i>&nbsp;Logout</a>
+                        </li>
+                        
+                    </ul>
+                    {% elif request.user.is_authenticated and request.user.is_student %}
+                    <ul class="navbar-nav mb-2 mb-lg-0">
+                        <li class="nav-item ">
+                            <a class="nav-link active " aria-current="page" href="{% url 'student dashboard' %}"><i class="fa-solid fa-user"></i>&nbsp;Profile</a>
                         </li>
                         <li class="nav-item ">
                             <a class="nav-link active " aria-current="page" href="{% url 'logout' %}"><i class="fa-solid fa-door-open"></i>&nbsp;Logout</a>

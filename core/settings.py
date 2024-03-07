@@ -31,7 +31,8 @@ INTERNAL_APPS = [
 
 EXTERNAL_APPS=[
     'account',
-    'main'
+    'main',
+    'paypal.standard.ipn',
 ]
 
 
@@ -133,3 +134,6 @@ EMAIL_HOST_PASSWORD = 'uayy oyco avsn lexa '  # Your Gmail password or app-speci
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+PAYPAL_RECEIVER_EMAIL = 'sb-8ed2n29800769@business.example.com'
+PAYPAL_TEST = True

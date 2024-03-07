@@ -14,8 +14,8 @@
     <h2 class="text-center mt-4 mb-4">Welcome to Dashboard, {{name}}</h2>
         <div class="row container ">
             <div class="col">Number of Courses: <strong>{{courses.count}} </strong></div>
-            <div class="col">Total Income: <strong>$100</strong></div>
-            <div class="col">Total Subscription: <strong>100</strong></div>
+            <div class="col">Total Income: <strong>{{total_income}}</strong></div>
+            <div class="col">Total Subscription: <strong>{{total_students}}</strong></div>
             <div class="col"><a href="{% url 'add course' %}" class="btn btn-success"> <i class="fa-solid fa-plus"></i>&nbsp; Add Course </a></div>
         </div>
     <div class="container">

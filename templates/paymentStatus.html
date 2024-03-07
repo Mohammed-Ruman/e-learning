@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Page{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% endif %}
+    <div class="container">
+        <h3 class="text-center mt-3 mb-3">PURCHASE DETAILS</h3>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                {% for course in courses %}
+                <div class="card shadow p-3 mb-5 bg-body rounded" style="max-width: 540px;">
+                    <div class="card-body">
+                        <h4 class="card-title"><b>{{ course.title }}</b></h4>
+                        <h5 class="card-text" >Price: ₹ {{ course.course_price }}</h5>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" required>
+                                <label class="form-check-label" for="confirmationCheck">
+                                    I confirm my purchase.
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary" >Buy Now</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+
+{% endblock %}
+
+
+

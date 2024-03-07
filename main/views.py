@@ -8,7 +8,12 @@ from account.email import send_otp_via_email,send_otp
 from django.urls import reverse
 import random
 from django.contrib.auth.decorators import login_required,permission_required
-from .models import Course,CourseContent
+from .models import Course,CourseContent, Subscription
+from django.db.models import Sum, F
+from paypal.standard.forms import PayPalPaymentsForm
+from django.conf import settings
+import uuid
+
 
 User=get_user_model()
 
@@ -116,18 +121,18 @@ def login_page(request):
     
 
 def verify_otp_login(request,email):
-
-    user = get_object_or_404(User, email=email)
-
-    print(f"Verify user : {user}")
-    
+    user = get_object_or_404(User, email=email) 
     if request.method == 'POST':
         otp = request.POST.get('otp')
         if user.otp == otp:
             # OTP is verified, mark user as verified
             login(request,user)
             messages.success(request, "Login Successfull")
-            return redirect('home')
+            if user.is_teacher:
+                return redirect('teacher dashboard')
+            else:
+                return redirect('student dashboard')
+
         else:
             messages.error(request, "Invalid OTP. Please try again.")
     
@@ -151,8 +156,19 @@ def handle_exception(request, exception):
 @permission_required(['main.add_course','main.view_course','main.change_course','main.delete_course'],raise_exception=True)
 def teacher_dashboard(request):
     courses = Course.objects.filter(teacher=request.user)
+    student_set=set()
     name=request.user.name()
-    return render(request,'teacher/dashboard.html',{'courses':courses,'name':name})
+    sub=Subscription.objects.filter(course__in=courses, purchased=True)
+    for sup in sub:
+        student_set.add(sup.student) 
+
+    print(student_set)   
+    
+
+    total_students = Subscription.objects.filter(course__in=courses, purchased=True).count()
+    total_income = Subscription.objects.filter(course__in=courses, purchased=True).aggregate(total_income=Sum(F('course__course_price')))
+
+    return render(request, 'teacher/dashboard.html', {'courses': courses, 'name': name, 'total_students': total_students, 'total_income': total_income['total_income']})
 
 @login_required(login_url='login')
 @permission_required(['main.add_course'],raise_exception=True)
@@ -241,3 +257,81 @@ def delete_course(request,id):
 
     return render(request,'teacher/delete.html',{"course":course})
 
+def course_page(request):
+    course=Course.objects.all()
+    print(course)
+    if request.method=="POST":
+        search=request.POST.get('search')
+        course = Course.objects.filter(title__icontains=search)
+        print(course)
+    return render(request,'course.html',{'courses':course})
+
+def course_detail_page(request,name):
+
+    course=Course.objects.filter(title=name)
+
+    return render(request,'course_page.html',{'courses':course})
+
+@login_required(login_url='login')
+@permission_required(['main.view_course','main.view_coursecontent'],raise_exception=True)
+def student_dashboard(request):
+    user = request.user
+    sub = Subscription.objects.filter(student=user, purchased=True)
+    courses = [subscription.course for subscription in sub]
+    print(courses)
+    return render(request, 'student/dashboard.html', {"courses": courses,'name':user.name})
+
+
+@login_required(login_url='login')
+@permission_required(['main.add_subscription'],raise_exception=True)
+def payment_page(request,name):
+    course=Course.objects.filter(title=name)
+    
+    host=request.get_host()
+    # if request.method == 'POST':
+
+    user=request.user
+    subscrip=Subscription.objects.create(        
+            course=course.first(),
+            student=user
+        )
+
+    checkout={
+            'business' : settings.PAYPAL_RECEIVER_EMAIL,
+            'amount' : course.first().course_price,
+            'item_name' : course.first().title,
+            'invoice' : uuid.uuid4(),
+            'currency_code' : 'USD',
+            'notify_url': 'http://{0}{1}'.format(host, reverse('paypal-ipn')),
+            'return_url': 'http://{0}{1}'.format(host, reverse('payment status', kwargs={'id': subscrip.id})),
+            'cancel_url': 'http://{0}{1}'.format(host, reverse('payment failure', kwargs={'id': subscrip.id})),
+        }
+
+    paypal=PayPalPaymentsForm(initial=checkout)
+        
+        # messages.success(request,"Purchase Successfull")
+        # return redirect('student dashboard')
+
+    return render(request,'payment.html',{'courses':course,'paypal':paypal})
+
+def payment_success(request, id):
+    subscrip=Subscription.objects.get(id=id)
+    subscrip.purchased=True
+    subscrip.save()
+    messages.success(request,"Purchase Successfull")
+    return redirect('student dashboard')
+
+
+def payment_failure(request, id):
+    subscrip=Subscription.objects.get(id=id)
+    subscrip.purchased=False
+    subscrip.save()
+    messages.error(request,"Payment Failure")
+    return redirect('student dashboard')
+
+@login_required(login_url='login')
+@permission_required(['main.view_course','main.view_coursecontent'],raise_exception=True)
+def content_page(request, name):
+    course=Course.objects.get(title=name)
+    content=CourseContent.objects.get(course=course)
+    return render(request,'content.html',{'content':content,'thumbnail':course.cover_image})
