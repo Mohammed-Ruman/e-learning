@@ -171,6 +171,15 @@ def teacher_dashboard(request):
     return render(request, 'teacher/dashboard.html', {'courses': courses, 'name': name, 'total_students': total_students, 'total_income': total_income['total_income']})
 
 @login_required(login_url='login')
+@permission_required(['main.add_course','main.view_course','main.change_course','main.delete_course'],raise_exception=True)
+def subscribed_students(request):
+    courses = Course.objects.filter(teacher=request.user)
+    sub=Subscription.objects.filter(course__in=courses, purchased=True)
+    student_set = {sup.student for sup in sub}
+    print(student_set)
+    return render(request, 'teacher/students.html', {'students':student_set})
+
+@login_required(login_url='login')
 @permission_required(['main.add_course'],raise_exception=True)
 def add_course(request):
     user=request.user

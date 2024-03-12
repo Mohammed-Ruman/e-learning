@@ -20,6 +20,7 @@ urlpatterns = [
     path('verify/<str:email>/', views.verify_otp, name='verify'),
     path('verify_login/<str:email>/', views.verify_otp_login, name='verify_login'),  
     path('teacher/dashboard',views.teacher_dashboard,name='teacher dashboard'),
+    path('teacher/students',views.subscribed_students,name='student list'),
     path('teacher/add',views.add_course,name='add course'),
     path('teacher/edit/<str:id>',views.edit_course,name='edit course'),
     path('teacher/delete/<str:id>',views.delete_course,name='delete course'),
