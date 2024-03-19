@@ -40,17 +40,10 @@
                             <input type="file" class="form-control" name="cover_image" accept="image/*" required>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Content Title</label>
-                            <input type="text" class="form-control" name="content_title"  required>
-                        </div>
+                        <div id="content-container"></div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Upload Content Video</label>
-                            <input type="file" class="form-control" name="content" accept="video/*" required>
-                        </div>
-                        
                         <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary" onclick="addContentField()">Add Content</button>
                             <button type="submit" class="btn btn-success">Create</button>
                         </div>
                     </form>
@@ -59,5 +52,36 @@
         </div>
     </div>
 </div>
+
+<div class="content-form" style="display: none;">
+    <h5 class="text-center mt-3">Chapter</h5>
+    <div class="mb-3">
+        <label class="form-label">Content Title</label>
+        <input type="text" class="form-control" name="content_title[]" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" name="content_description[]" required></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Upload Content Video</label>
+        <input type="file" class="form-control" name="content[]" accept="video/*" required>
+    </div>
+</div>
+
+<script>
+    let contentFieldCount = 0;
+
+    function addContentField() {
+        const contentContainer = document.getElementById('content-container');
+        const contentForm = document.querySelector('.content-form').cloneNode(true);
+        contentForm.querySelector('h5').innerText = `Chapter ${contentFieldCount + 1}`;
+        contentForm.style.display = 'block'; // Show the cloned form
+        contentContainer.appendChild(contentForm);
+        contentFieldCount++;
+    }
+</script>
 
 {% endblock %}

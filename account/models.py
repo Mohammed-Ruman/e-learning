@@ -13,7 +13,7 @@ class CustomUser(AbstractUser):
     is_student = models.BooleanField(default=False)
     password = models.CharField(max_length=8)
     is_verified = models.BooleanField(default=False)
-    otp = models.CharField(max_length=6, default="000000")
+    otp = models.CharField(max_length=6)
 
     objects = UserManager()
 

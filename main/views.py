@@ -13,6 +13,7 @@ from django.db.models import Sum, F
 from paypal.standard.forms import PayPalPaymentsForm
 from django.conf import settings
 import uuid
+from django.core.mail import send_mail
 
 
 User=get_user_model()
@@ -162,13 +163,17 @@ def teacher_dashboard(request):
     for sup in sub:
         student_set.add(sup.student) 
 
-    print(student_set)   
-    
+    course_sub={}
 
+    for course in courses:
+        count=Subscription.objects.filter(course=course,purchased=True).count() 
+        course_sub[course.title] =count
+    
+    print(course_sub)
     total_students = Subscription.objects.filter(course__in=courses, purchased=True).count()
     total_income = Subscription.objects.filter(course__in=courses, purchased=True).aggregate(total_income=Sum(F('course__course_price')))
 
-    return render(request, 'teacher/dashboard.html', {'courses': courses, 'name': name, 'total_students': total_students, 'total_income': total_income['total_income']})
+    return render(request, 'teacher/dashboard.html', {'courses': courses, 'name': name, 'total_students': total_students, 'total_income': total_income['total_income'],'course_count':course_sub})
 
 @login_required(login_url='login')
 @permission_required(['main.add_course','main.view_course','main.change_course','main.delete_course'],raise_exception=True)
@@ -176,7 +181,14 @@ def subscribed_students(request):
     courses = Course.objects.filter(teacher=request.user)
     sub=Subscription.objects.filter(course__in=courses, purchased=True)
     student_set = {sup.student for sup in sub}
-    print(student_set)
+    return render(request, 'teacher/students.html', {'students':student_set})
+
+@login_required(login_url='login')
+@permission_required(['main.add_course','main.view_course','main.change_course','main.delete_course'],raise_exception=True)
+def subscribed_students_course(request,name):
+    courses = Course.objects.filter(title=name)
+    sub=Subscription.objects.filter(course__in=courses, purchased=True)
+    student_set = {sup.student for sup in sub}  
     return render(request, 'teacher/students.html', {'students':student_set})
 
 @login_required(login_url='login')
@@ -189,10 +201,7 @@ def add_course(request):
         description = request.POST.get('description')
         course_price = request.POST.get('course_price')
         cover_image = request.FILES.get('cover_image')
-
-        content_title = request.POST.get('content_title')
-        content = request.FILES.get('content')
-        
+    
         # Create a new Course object with the uploaded file
         course = Course.objects.create(
             title=title,
@@ -202,31 +211,68 @@ def add_course(request):
             teacher=user
         )
 
-        CourseContent.objects.create(
-            course=course,
-            content_title=content_title,
-            content=content
-        )
+        content_titles = request.POST.getlist('content_title[]')
+        content_descriptions = request.POST.getlist('content_description[]')
+        contents = request.FILES.getlist('content[]')
+
+        for content_title, content_description, content_file in zip(content_titles, content_descriptions, contents):
+            CourseContent.objects.create(
+                course=course,
+                content_title=content_title,
+                content_description=content_description,
+                content=content_file
+            )
+
         messages.success(request,"Course Added!")
         return redirect('teacher dashboard')
     
     return render(request,'teacher/addcourse.html')
 
+
 @login_required(login_url='login')
-@permission_required(['main.change_course'],raise_exception=True)
-def edit_course(request,id):
-    course=Course.objects.get(id=id)
-    content=CourseContent.objects.get(course=course)
+@permission_required(['main.add_course'],raise_exception=True)
+def add_topic(request, id):
+    course = Course.objects.get(id=id)
+    students=Subscription.objects.filter(course=course,purchased=True)
+    print(students)
+    if request.method == 'POST':
+        
+        content_titles = request.POST.getlist('content_title[]')
+        content_descriptions = request.POST.getlist('content_description[]')
+        contents = request.FILES.getlist('content[]')
+
+        for content_title, content_description, content_file in zip(content_titles, content_descriptions, contents):
+            CourseContent.objects.create(
+                course=course,
+                content_title=content_title,
+                content_description=content_description,
+                content=content_file
+            )
+
+        subject = 'New Topic Added!'
+        for student in students:
+            html_message = f'Dear E-Learner, a new topic has been added to the course. <strong>{course.title}</strong>'
+            send_mail(subject, "", settings.EMAIL_HOST, [student.student.email], html_message=html_message, fail_silently=False)
+
+
+        messages.success(request,"Topic Added!")
+        return redirect('teacher dashboard')
+
+    return render(request,'teacher/addnewtopic.html')
+
+
+@login_required(login_url='login')
+@permission_required(['main.change_course'], raise_exception=True)
+def edit_course(request, id):
+    course = Course.objects.get(id=id)
+    contents = CourseContent.objects.filter(course=course)
+
     if request.method == 'POST':
         title = request.POST.get('title')
         description = request.POST.get('description')
         course_price = request.POST.get('course_price')
         cover_image = request.FILES.get('cover_image')
 
-        content_title = request.POST.get('content_title')
-        contentFile = request.FILES.get('content')
-        
-        # Create a new Course object with the uploaded file
         course.title = title
         course.description = description
         course.course_price = course_price
@@ -236,16 +282,22 @@ def edit_course(request,id):
 
         course.save()
 
-        content.course=course
-        content.content_title=content_title
+        for index, content in enumerate(contents):
+            content_title = request.POST.get('content_title[%d]' % index)
+            content_description = request.POST.get('content_description[%d]' % index)
+            contentFile = request.FILES.get('content[%d]' % index)
 
-        if contentFile:
-            content.content=contentFile
+            content.content_title = content_title
+            content.content_description = content_description
+            if contentFile:
+                content.content = contentFile
+            content.save()
 
-        content.save()
-        messages.success(request,"Course Edited Successfully!")
+        messages.success(request, "Course Edited Successfully!")
         return redirect('teacher dashboard')
-    return render(request,'teacher/editcourse.html',{'course':course,'content':content})
+
+    return render(request, 'teacher/editcourse.html', {'course': course, 'contents': contents})
+
 
 @login_required(login_url='login')
 @permission_required(['main.delete_course'],raise_exception=True)
@@ -265,6 +317,23 @@ def delete_course(request,id):
 
 
     return render(request,'teacher/delete.html',{"course":course})
+
+@login_required(login_url='login')
+@permission_required(['main.delete_course'],raise_exception=True)
+def delete_course_content(request,id):
+
+    if request.method=="POST":
+        confirm_delete=request.POST.get('confirm_delete')
+
+        if confirm_delete=='yes':
+            CourseContent.objects.filter(id=id).delete()
+            messages.success(request,"Topic Deleted!")
+            return redirect('teacher dashboard')
+        elif confirm_delete=='no':
+            return redirect('teacher dashboard')
+
+
+    return render(request,'teacher/delete.html',{"id":id})
 
 def course_page(request):
     course=Course.objects.all()
@@ -342,5 +411,5 @@ def payment_failure(request, id):
 @permission_required(['main.view_course','main.view_coursecontent'],raise_exception=True)
 def content_page(request, name):
     course=Course.objects.get(title=name)
-    content=CourseContent.objects.get(course=course)
-    return render(request,'content.html',{'content':content,'thumbnail':course.cover_image})
+    contents=CourseContent.objects.filter(course=course)
+    return render(request,'content.html',{'contents':contents,'course':course.title})

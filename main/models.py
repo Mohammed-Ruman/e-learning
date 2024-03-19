@@ -25,6 +25,7 @@ class Course(models.Model):
 class CourseContent(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     content_title = models.CharField(max_length=255)
+    content_description = models.TextField(default='description')
     content = models.FileField(upload_to='course_videos/')
 
     def __str__(self):

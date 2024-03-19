@@ -25,9 +25,14 @@
                         <li class="nav-item">
                             <a class="nav-link active" aria-current="page" href="{% url 'home' %}"><i class="fa-solid fa-house"></i>&nbsp;Home</a>
                         </li>
+                        {% if request.user.is_authenticated and request.user.is_teacher %}
+                        
+                        {% else %}
                         <li class="nav-item">
                             <a class="nav-link active" aria-current="page" href="{% url 'course' %}"><i class="fa-solid fa-book"></i>&nbsp;Course</a>
                         </li>
+                        {% endif %}
+
                     </ul>
                     {% if request.user.is_authenticated and request.user.is_teacher %}
                     <ul class="navbar-nav mb-2 mb-lg-0">

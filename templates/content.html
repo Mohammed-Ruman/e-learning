@@ -11,24 +11,26 @@
     {% endfor %}
     {% endif %}
     <div class="container">
-        <h3 class="text-center mt-3 mb-3">Course Content</h3>
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow p-3 mb-5 bg-body rounded" style="max-width: 540px;">
-                    <div class="card-body">
-                        <h4 class="card-title text-center"><b>{{ content.content_title }}</b></h4>
-                        <!-- <video controls width="100%">
-                            <source src="/media/{{ content.content }}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video> -->
-                        <video controls width="100%" poster="/media/{{ thumbnail}}" controlsList="nodownload">
-                            <source src="/media/{{ content.content }}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                        
+        <h3 class="text-center mt-3 mb-3 fw-bolder">{{course}}</h3>
+        <br>
+        <div class="row row-cols-1 row-cols-md-2 g-4 justify-content-center">
+            {% for content in contents %}
+                <div class="col ">
+                    <div class="card shadow p-3 mb-5 bg-body rounded " style="max-width: 540px;">
+                        <h5 class="text-center fw-bold">Chapter - {{forloop.counter}} </h5>
+                        <div class="card-body">
+                            <video controls width="100%"  controlsList="nodownload" class="card-img-top border border-dark">
+                                <source src="/media/{{ content.content }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <div class="card-body">
+                                <h5 class="card-title"><b>{{content.content_title}}</b></h5>
+                                <p class="card-text">{{content.content_description}}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            {% endfor %}
         </div>
     </div>
     
